@@ -1,26 +1,26 @@
 ---
 name: toooony-spec
-description: JavaScript 和 TypeScript 的实现与审查规范，覆盖 TypeScript 项目基础配置、命名、基础语法、类型设计、文件和测试目录组织、控制流、私有字段及 TypeScript 错误标注。编写、补全、修改、修复、重构或审查 .js、.jsx、.mjs、.cjs、.ts、.tsx、.mts、.cts 文件、TypeScript 项目依赖和 tsconfig 时使用，也适用于 Node.js 脚本、前端逻辑、工具函数和配置代码。
+description: Implementation and review standards for JavaScript and TypeScript, covering basic TypeScript project configuration, naming, basic syntax, type design, file and test directory organization, control flow, private fields, and TypeScript error annotations. Use when writing, completing, modifying, fixing, refactoring, or reviewing .js, .jsx, .mjs, .cjs, .ts, .tsx, .mts, or .cts files, TypeScript project dependencies, or tsconfig files. Also applies to Node.js scripts, frontend logic, utility functions, and configuration code.
 ---
 
-# TypeScript 项目基础配置
+# Basic TypeScript Project Configuration
 
-- TypeScript 项目必须安装 `ts-essentials`，并将其放在 `dependencies` 中。
-- `tsconfig` 必须至少启用 `strictNullChecks`，即将 `compilerOptions.strictNullChecks` 设置为 `true`；可以同时启用 `strict` 等更完整的严格检查选项。
+- TypeScript projects must install `ts-essentials` and list it under `dependencies`.
+- `tsconfig` must enable at least `strictNullChecks` by setting `compilerOptions.strictNullChecks` to `true`. More comprehensive strict-checking options such as `strict` may also be enabled.
 
-# 命名
+# Naming
 
-## 回调参数
+## Callback Parameters
 
-回调函数的参数必须使用描述性名称。参数表示集合中的通用元素时，优先命名为 `item`。
+Callback function parameters must use descriptive names. Prefer `item` when a parameter represents a generic element in a collection.
 
-## 描述性命名
+## Descriptive Names
 
-变量、常量、函数和方法等应当使用描述性强的长名称。
+Variables, constants, functions, methods, and similar identifiers should use long, descriptive names.
 
-## 缩写
+## Abbreviations
 
-创建或重命名标识符时，名称中的缩写必须保持统一大小写。使用 camelCase、PascalCase 或 MixedCaps 时，名称开头的小写缩写使用全小写，其他位置的缩写使用全大写。使用 snake_case、kebab-case 或全小写命名时，缩写遵循该命名形式使用全小写。已有 API、框架约定和外部名称必须保持其正式大小写。
+When creating or renaming identifiers, abbreviations within a name must use consistent capitalization. In camelCase, PascalCase, or MixedCaps names, use all lowercase for a lowercase abbreviation at the beginning of the name and all uppercase for abbreviations elsewhere. In snake_case, kebab-case, or all-lowercase names, abbreviations must follow that naming style and remain lowercase. Existing APIs, framework conventions, and external names must retain their official capitalization.
 
 ```text
 apiClient
@@ -30,51 +30,51 @@ userID
 user_id
 ```
 
-# 基础语法与代码风格
+# Basic Syntax and Code Style
 
-## 字符串
+## Strings
 
-字符串必须使用单引号。
+Strings must use single quotes.
 
-## 枚举值
+## Enum Values
 
-枚举值必须使用带有 `as const` 的常量对象，并从该对象派生联合类型。
+Enum values must use a constant object with `as const`, with the union type derived from that object.
 
 ```ts
 export const FOO = {
-  BAR: 'bar',
+  BAR: "bar",
 } as const;
 
 export type Foo = (typeof FOO)[keyof typeof FOO];
 ```
 
-## 注释
+## Comments
 
-- 函数、方法和类的文档注释应当使用 JSDoc；其他注释应当使用简洁的单行 `//` 文本。
-- 注释应当重点说明设计原因、约束条件和上下文。
-- 注释、描述和说明性文字中的中文与英文、数字之间应当保留一个空格。
+- Documentation comments for functions, methods, and classes should use JSDoc. Other comments should use concise, single-line `//` text.
+- Comments should focus on design rationale, constraints, and context.
+- In comments, descriptions, and explanatory text, retain one space between Chinese text and English text or numbers.
 
-# 类型设计
+# Type Design
 
-## 类型声明
+## Type Declarations
 
-仅在能够提升代码可读性、复用性或边界安全时，为局部变量、中间结果和辅助结构显式定义类型。函数签名、公开 API 及项目已有约定要求的类型必须显式声明。
+Explicitly define types for local variables, intermediate results, and auxiliary structures only when doing so improves readability, reusability, or boundary safety. Types required by function signatures, public APIs, and existing project conventions must be explicitly declared.
 
-## JSON 对象
+## JSON Objects
 
-表示可以序列化为 JSON Object 的数据时，必须使用 `ts-essentials` 提供的 `JsonObject`。默认直接使用 `JsonObject` 并保持其宽泛类型；不得仅因当前代码已知对象结构而收窄类型或定义继承 `JsonObject` 的接口。
+Use `JsonObject` from `ts-essentials` for data that can be serialized as a JSON Object. Use `JsonObject` directly by default and retain its broad type. Do not narrow the type or define an interface that extends `JsonObject` merely because the current code knows the object's structure.
 
-仅当业务约束要求在编译期保证特定字段，且该精确类型用于可复用契约或明确的系统边界时，才定义继承 `JsonObject` 的接口。局部变量、中间结果、辅助结构、透传数据和结构动态的数据必须直接使用 `JsonObject`。
+Define an interface that extends `JsonObject` only when business constraints require specific fields to be guaranteed at compile time and the precise type serves as a reusable contract or an explicit system boundary. Local variables, intermediate results, auxiliary structures, pass-through data, and dynamically structured data must use `JsonObject` directly.
 
-默认写法：
+Default form:
 
 ```ts
-import type { JsonObject } from 'ts-essentials';
+import type { JsonObject } from "ts-essentials";
 
 const metadata: JsonObject = getMetadata();
 ```
 
-仅在满足上述例外条件时：
+Only when the exception above applies:
 
 ```ts
 interface SearchState extends JsonObject {
@@ -84,28 +84,28 @@ interface SearchState extends JsonObject {
 }
 ```
 
-该对象的所有层级只能包含对象、数组、字符串、数字、布尔值和 `null`。使用适合其语义的独立类型和存储位置管理函数、`undefined`、`symbol`、`bigint`、`Date`、`Map`、`Set`、类实例及其他非 JSON 数据。
+Every level of the object may contain only objects, arrays, strings, numbers, booleans, and `null`. Manage functions, `undefined`, `symbol`, `bigint`, `Date`, `Map`, `Set`, class instances, and other non-JSON data with separate types and storage locations appropriate to their semantics.
 
-## JSON 数组
+## JSON Arrays
 
-表示可以序列化为 JSON Array 的数据时，必须使用 `ts-essentials` 提供的 `JsonArray`。默认直接使用 `JsonArray` 并保持其宽泛类型；不得仅因当前代码已知部分元素结构而收窄数组类型。
+Use `JsonArray` from `ts-essentials` for data that can be serialized as a JSON Array. Use `JsonArray` directly by default and retain its broad type. Do not narrow the array type merely because the current code knows the structure of some elements.
 
-仅当业务约束要求在编译期保证元素结构，且该精确类型用于可复用契约或明确的系统边界时，才定义精确的数组元素类型。局部变量、中间结果、辅助结构、透传数据和元素结构动态的数组必须直接使用 `JsonArray`。
+Define a precise array element type only when business constraints require the element structure to be guaranteed at compile time and the precise type serves as a reusable contract or an explicit system boundary. Local variables, intermediate results, auxiliary structures, pass-through data, and arrays with dynamic element structures must use `JsonArray` directly.
 
 ```ts
-import type { JsonArray } from 'ts-essentials';
+import type { JsonArray } from "ts-essentials";
 
 const records: JsonArray = getRecords();
 ```
 
-## 通用数组
+## General Arrays
 
-参数或数据可以同时接受可变数组和只读数组时，必须使用 `ts-essentials` 提供的 `AnyArray<Type>`，并保持数组可变性这一外层形态宽松。元素类型已知时必须明确传入；元素类型未知时使用 `unknown`。
+When a parameter or data value can accept both mutable and readonly arrays, use `AnyArray<Type>` from `ts-essentials` and keep the outer array mutability flexible. Pass the element type explicitly when it is known. Use `unknown` when the element type is unknown.
 
-表示可变或只读的宽松 JSON 对象数组时，使用 `AnyArray<JsonObject>`。
+Use `AnyArray<JsonObject>` for a flexible array of JSON objects that may be mutable or readonly.
 
 ```ts
-import type { AnyArray, JsonObject } from 'ts-essentials';
+import type { AnyArray, JsonObject } from "ts-essentials";
 
 const processItems = (items: AnyArray<Item>) => {
   for (const item of items) {
@@ -116,54 +116,54 @@ const processItems = (items: AnyArray<Item>) => {
 const records: AnyArray<JsonObject> = getRecords();
 ```
 
-## 同步或异步返回值
+## Synchronous or Asynchronous Return Values
 
-函数、回调、钩子或扩展接口可以同时返回同步值和异步值时，必须使用 `ts-essentials` 提供的 `AsyncOrSync<Type>`，并保持返回形态宽松。返回值类型已知时必须明确传入。
+When a function, callback, hook, or extension interface may return either a synchronous or asynchronous value, use `AsyncOrSync<Type>` from `ts-essentials` and keep the return form flexible. Pass the return value type explicitly when it is known.
 
-表示同步或异步返回的宽松 JSON 对象时，使用 `AsyncOrSync<JsonObject>`。
+Use `AsyncOrSync<JsonObject>` for a flexible JSON object returned synchronously or asynchronously.
 
 ```ts
-import type { AsyncOrSync, JsonObject } from 'ts-essentials';
+import type { AsyncOrSync, JsonObject } from "ts-essentials";
 
 type Handler = () => AsyncOrSync<Result>;
 type MetadataLoader = () => AsyncOrSync<JsonObject>;
 ```
 
-# 文件组织
+# File Organization
 
 ## Src Layout
 
-项目必须使用 Src Layout，将源代码放在 `src/` 目录中。
+Projects must use the Src Layout, with source code placed in the `src/` directory.
 
-## 辅助内容
+## Supporting Content
 
-实现文件应当主要放置实现逻辑。常量、模块级变量、配置对象、数据映射或类型定义较多时，应当按用途分别放到独立文件中。这些文件必须放在原文件的同级目录，与使用它们的代码放在一起。
+Implementation files should primarily contain implementation logic. When there are many constants, module-level variables, configuration objects, data mappings, or type definitions, place them in separate files according to purpose. These files must be placed in the same directory as the original file, alongside the code that uses them.
 
-## 测试文件
+## Test Files
 
-测试文件必须集中放置在当前模块目录下的 `__tests__/` 子目录中，与该模块的源文件分目录组织。
+Test files must be grouped in a `__tests__/` subdirectory under the current module directory and organized separately from that module's source files.
 
-# 控制流
+# Control Flow
 
-## 卫语句和提前返回
+## Guard Clauses and Early Returns
 
-分支逻辑应当优先使用卫语句（Guard Clauses）或提前返回（Early Return），保持较低的嵌套深度。
+Branching logic should prefer guard clauses or early returns to keep nesting depth low.
 
-## 立即执行逻辑
+## Immediately Executed Logic
 
-需要立即执行的独立逻辑必须提取为具有描述性名称的函数，再显式调用该函数取得结果。
+Independent logic that must execute immediately must be extracted into a descriptively named function, which is then called explicitly to obtain the result.
 
 ```ts
 const createConfig = () => {
-  return { environment: 'production' };
+  return { environment: "production" };
 };
 
 const config = createConfig();
 ```
 
-## 可迭代对象遍历
+## Iterating Over Iterables
 
-遍历可迭代对象时，优先使用 `for...of` 循环。
+Prefer `for...of` loops when iterating over iterables.
 
 ```ts
 for (const item of items) {
@@ -171,23 +171,46 @@ for (const item of items) {
 }
 ```
 
-# 封装与类型检查
+# Encapsulation and Type Checking
 
-## 类的私有成员
+## Private Class Members
 
-类的私有成员必须使用 ES2022 的 `#` 私有字段表示。
+Private class members must use ES2022 `#` private fields.
 
 ```ts
 class Cache {
-  #data = { foo: 'bar' };
+  #data = { foo: "bar" };
 }
 ```
 
-## TypeScript 错误指令
+## TypeScript Error Directives
 
-代码中需要保留已知类型错误时，必须使用 `@ts-expect-error` 标注，并说明出现该错误的原因。
+When a known type error must remain in the code, annotate it with `@ts-expect-error` and explain why the error occurs.
 
 ```ts
-// @ts-expect-error -- 第三方类型声明缺少 runtimeOnly 属性
+// @ts-expect-error -- The third-party type declaration lacks the runtimeOnly property
 legacyClient.runtimeOnly();
 ```
+
+# UI Copy
+
+## Spacing Between Chinese Text, English Text, and Numbers
+
+In user-visible Chinese copy, retain one ASCII space between Chinese characters and English text or Arabic numerals.
+
+Correct examples:
+
+- `支持 iOS 18 及以上版本`
+- `共找到 3 条记录`
+
+Code, URLs, file paths, email addresses, official product names, and other indivisible identifiers must remain unchanged.
+
+Do not add spaces between Chinese punctuation and adjacent English text or Arabic numerals, for example: `支持 iOS、Android 和 Windows`.
+
+## Punctuation and Wording
+
+- Chinese sentences should use full-width Chinese punctuation.
+- Short text such as buttons, labels, and titles usually should not end with punctuation. Prompts, instructions, and error messages should use terminal punctuation when they are complete sentences.
+- Button copy should use a clear action and express the operation's result, such as “保存修改”. For confirmation actions, use “取消” and the specific action name, such as “删除”; avoid using “确定”, “是”, or “否” alone.
+- Error messages must explain what happened. When a recovery method can be provided, they should also explain the next action, such as “保存失败，请检查网络连接后重试。”
+- The same concept must use a consistent name within the same interface. When a product glossary exists, use the names from that glossary.

@@ -1,13 +1,13 @@
 ---
 name: toooony-react
-description: React 和 JSX/TSX 的框架专属实现与审查规范，覆盖函数式组件、页面导出、Props、JSON 可序列化的组件状态、状态初始化、Effect、交互副作用、条件渲染、并发渲染、代码分割、回调命名及 React 文件命名。编写、补全、修改、修复、重构、优化或审查 React 组件、页面、JSX/TSX 文件和自定义 Hook 时使用，也适用于基于 React 的前端框架项目。
+description: React and JSX/TSX-specific implementation and review standards covering functional components, page exports, props, JSON-serializable component state, state initialization, Effects, interaction side effects, conditional rendering, concurrent rendering, code splitting, callback naming, and React file naming. Use when writing, completing, modifying, fixing, refactoring, optimizing, or reviewing React components, pages, JSX/TSX files, and custom Hooks, including projects built with React-based frontend frameworks.
 ---
 
-# 组件定义与导出
+# Component Definitions and Exports
 
-## 函数式组件与箭头函数
+## Functional Components and Arrow Functions
 
-必须使用函数式组件。函数式组件本身和组件内部的工具函数都必须使用箭头函数定义。
+You must use functional components. Both functional components and their internal utility functions must be defined with arrow functions.
 
 ```tsx
 import type { FC } from "react";
@@ -21,9 +21,9 @@ export const Foo: FC = () => {
 };
 ```
 
-## 页面组件的默认导出
+## Default Exports for Page Components
 
-组件用作页面且框架允许默认导出时，使用下列风格：
+When a component serves as a page and the framework permits default exports, use the following style:
 
 ```tsx
 import type { FC } from "react";
@@ -35,9 +35,9 @@ const FooPage: FC = () => {
 export default FooPage;
 ```
 
-## 组件 Props 类型
+## Component Props Types
 
-组件的 Props 类型必须单独定义，并作为 `FC` 的类型参数传入。
+A component's Props type must be defined separately and passed as the type argument to `FC`.
 
 ```tsx
 import type { FC } from "react";
@@ -58,11 +58,11 @@ export const Foo: FC<FooProps> = (props) => {
 };
 ```
 
-# 组件状态
+# Component State
 
-## 统一的 componentData
+## Unified `componentData`
 
-组件自身的可变状态统一定义在一个 `componentData` 对象中，并通过同一个 `useState` 管理。`componentData` 必须是可以序列化为 JSON Object 的纯数据，并直接使用 `ts-essentials` 的 `JsonObject` 作为类型。不得为 `componentData` 额外定义或使用继承、扩展 `JsonObject` 的专用类型。
+Define all mutable state owned by the component in a single `componentData` object and manage it with one `useState`. `componentData` must contain only plain data that can be serialized as a JSON object, and it must use `JsonObject` from `ts-essentials` directly as its type. Do not define or use a dedicated type for `componentData` that inherits from or extends `JsonObject`.
 
 ```tsx
 import { useState } from "react";
@@ -77,20 +77,20 @@ const [componentData, setComponentData] = useState<JsonObject>({
 });
 ```
 
-`componentData` 中的列表和表单数据必须使用统一命名：
+List and form data inside `componentData` must use consistent names:
 
-- 列表条目必须使用 `listData`，即 `componentData.listData`；无论列表是否分页。分页页码、总数等元数据可以放在 `componentData.pagination` 或项目已有的等价字段中。
-- 表单模型使用 `formData`，即 `componentData.formData`，并将各表单字段集中在该对象内。
+- List items must be named `listData` and accessed through `componentData.listData`, regardless of whether the list is paginated. Metadata such as the page number and total count may be stored in `componentData.pagination` or an equivalent field already used by the project.
+- Name the form model `formData`, access it through `componentData.formData`, and group all form fields within that object.
 
-普通组件状态默认集中在 `componentData` 中。React API、第三方 API 或数据语义要求独立声明时，使用对应的状态来源。典型情况包括：
+Keep ordinary component state in `componentData` by default. Use the corresponding state source when React APIs, third-party APIs, or data semantics require separate declarations. Typical cases include:
 
-- Props 和 Context 保持为外部数据源，直接从对应 API 读取。
-- DOM 引用、子组件引用、定时器标识和渲染无关数据使用 `useRef` 或对应 API 管理。
-- 能够由 Props 或现有状态直接计算得到的派生数据，直接在渲染期间计算；仅在计算开销确实较大时使用 `useMemo`。
-- 自定义 Hook、外部 Store、Router 及第三方 Hook 返回的状态或实例。
-- 静态常量和函数保留为普通绑定。
+- Keep Props and Context as external data sources and read them directly from their respective APIs.
+- Manage DOM references, child component references, timer identifiers, and render-independent data with `useRef` or the corresponding API.
+- Calculate derived data directly during rendering when it can be computed from Props or existing state. Use `useMemo` only when the computation is genuinely expensive.
+- Keep state or instances returned by custom Hooks, external stores, routers, and third-party Hooks in their original sources.
+- Keep static constants and functions as regular bindings.
 
-按不可变数据处理 React 状态。`setComponentData` 会替换整个对象，因此更新部分字段时保留其他字段；新状态依赖旧状态时使用函数式更新：
+Treat React state as immutable data. `setComponentData` replaces the entire object, so preserve unchanged fields when updating part of it. Use a functional update when the next state depends on the previous state:
 
 ```tsx
 const handleSearch = (keyword: string) => {
@@ -105,11 +105,11 @@ const handleSearch = (keyword: string) => {
 };
 ```
 
-更新 `componentData` 时，为发生变化的嵌套对象和数组创建新引用，并通过 setter 写回。多个字段属于同一次状态转换时，在一次 `setComponentData` 调用中完成更新。
+When updating `componentData`, create new references for every nested object and array that changes, then write them back through the setter. When multiple fields belong to the same state transition, update them in a single `setComponentData` call.
 
-## 昂贵初始状态的惰性初始化
+## Lazy Initialization for Expensive Initial State
 
-创建初始状态需要解析较大的序列化数据或执行其他开销较大的同步计算时，必须向 `useState` 传入纯初始化函数。初始化函数不得产生副作用，并且相同输入必须得到相同结果。
+When creating the initial state requires parsing a large serialized payload or performing another expensive synchronous computation, you must pass a pure initializer function to `useState`. The initializer must not produce side effects, and identical inputs must produce identical results.
 
 ```tsx
 import { useState } from "react";
@@ -120,11 +120,11 @@ const [componentData, setComponentData] = useState<JsonObject>(() => ({
 }));
 ```
 
-# 生命周期与交互
+# Lifecycle and Interactions
 
-## 组件初始化
+## Component Initialization
 
-组件挂载时执行数据请求等副作用操作，使用 `ahooks` 的 `useMount`：
+Use `useMount` from `ahooks` for side effects such as data requests that run when the component mounts:
 
 ```tsx
 import { useMount } from "ahooks";
@@ -134,9 +134,9 @@ useMount(() => {
 });
 ```
 
-## 应用级初始化
+## Application-Level Initialization
 
-浏览器端且必须在每次应用启动时执行一次的初始化逻辑，应当放在应用入口中执行。组件挂载时需要执行的局部逻辑继续使用 `useMount`。
+Browser-side initialization logic that must run once on every application startup should be placed in the application entry point. Continue to use `useMount` for local logic that must run when a component mounts.
 
 ```tsx
 import { createRoot } from "react-dom/client";
@@ -151,22 +151,22 @@ initializeApplication();
 createRoot(document.getElementById("root")!).render(<App />);
 ```
 
-## 交互副作用
+## Interaction Side Effects
 
-由点击、提交、拖拽等明确用户交互触发的请求、通知和其他副作用，必须直接放在对应的事件处理函数中执行。
+Requests, notifications, and other side effects triggered by explicit user interactions such as clicks, submissions, and drag operations must be executed directly in the corresponding event handler.
 
 ```tsx
 const handleSubmit = async () => {
   await submitForm(componentData.formData);
-  showToast("提交成功");
+  showToast("Submitted successfully");
 };
 ```
 
-Effect 用于根据当前渲染结果与网络连接、浏览器 API、第三方组件等外部系统保持同步。
+Use Effects to synchronize the current render result with external systems such as network connections, browser APIs, and third-party components.
 
-## Effect 职责与依赖
+## Effect Responsibilities and Dependencies
 
-每个 Effect 应当只负责一个独立的同步过程。多个同步过程依赖不同的响应式值时，必须拆分为多个 Effect。
+Each Effect should manage exactly one independent synchronization process. Synchronization processes that depend on different reactive values must be split into separate Effects.
 
 ```tsx
 import { useEffect } from "react";
@@ -180,7 +180,7 @@ useEffect(() => {
 }, [pageTitle]);
 ```
 
-Effect 的依赖必须包含 Effect 中读取的响应式值。仅使用对象的某个字段时，依赖该字段，避免对象其他字段变化时重复执行 Effect。
+An Effect's dependency list must include every reactive value read by the Effect. When the Effect uses only one field of an object, depend on that field to avoid rerunning the Effect when unrelated fields change.
 
 ```tsx
 useEffect(() => {
@@ -188,9 +188,9 @@ useEffect(() => {
 }, [user.id]);
 ```
 
-## Effect Event
+## Effect Events
 
-项目使用支持 `useEffectEvent` 的 React 版本时，可以将 Effect 内需要读取最新 Props 或状态、但不应触发重新同步的事件逻辑提取为 Effect Event。Effect Event 仅在当前组件的 Effect 或其他 Effect Event 中调用，并且不加入 Effect 依赖数组。
+When the project uses a React version that supports `useEffectEvent`, event logic that must read the latest Props or state inside an Effect but should not trigger resynchronization may be extracted into an Effect Event. Call an Effect Event only from an Effect or another Effect Event in the same component, and do not add it to the Effect dependency array.
 
 ```tsx
 import { useEffect, useEffectEvent } from "react";
@@ -210,9 +210,9 @@ useEffect(() => {
 }, [roomID]);
 ```
 
-## 回调 Props 与处理函数命名
+## Callback Props and Handler Naming
 
-组件回调 Props 使用 `onXxx` 命名，组件内部对应的处理函数使用 `handleXxx` 命名。
+Name component callback Props with the `onXxx` pattern and the corresponding internal handlers with the `handleXxx` pattern.
 
 ```tsx
 interface SearchBoxProps {
@@ -226,15 +226,15 @@ export const SearchBox: FC<SearchBoxProps> = (props) => {
     onSearch("React");
   };
 
-  return <button onClick={handleSearch}>搜索</button>;
+  return <button onClick={handleSearch}>Search</button>;
 };
 ```
 
-# 渲染与性能
+# Rendering and Performance
 
-## 明确的条件渲染
+## Explicit Conditional Rendering
 
-条件值可能是数字或其他会被 React 渲染的值时，必须先得到明确的布尔条件，再使用三元表达式渲染目标内容或 `null`。
+When a condition may be a number or another value that React can render, you must first derive an explicit Boolean condition, then use a ternary expression to render the target content or `null`.
 
 ```tsx
 import type { FC } from "react";
@@ -251,9 +251,9 @@ export const Badge: FC<BadgeProps> = (props) => {
 };
 ```
 
-## 组件代码分割
+## Component Code Splitting
 
-首屏不需要且体积较大的组件应当使用 `lazy` 延迟加载，并在能够表达独立加载状态的位置使用 `Suspense` 提供稳定的回退界面。懒加载组件必须在模块顶层定义。
+Large components that are not needed for the initial render should be lazy-loaded with `lazy`, and `Suspense` should provide a stable fallback UI at a location that can represent an independent loading state. Lazy-loaded components must be defined at the module's top level.
 
 ```tsx
 import { lazy, Suspense } from "react";
@@ -270,9 +270,9 @@ export const Dashboard: FC = () => {
 };
 ```
 
-## 非紧急更新
+## Non-Urgent Updates
 
-状态更新会触发开销较大的渲染并阻塞输入、点击等紧急交互时，可以使用 `useTransition` 将该更新标记为非紧急更新。`isPending` 仅表示 Transition 是否仍在进行；异步请求的取消、结果顺序和错误处理继续由请求逻辑负责。
+When a state update triggers an expensive render that blocks urgent interactions such as input or clicks, you may use `useTransition` to mark the update as non-urgent. `isPending` indicates only whether the Transition is still in progress. Keep request cancellation, result ordering, and error handling in the request logic.
 
 ```tsx
 import { useTransition } from "react";
@@ -291,7 +291,7 @@ const handleSelectTab = (selectedTab: string) => {
 return <TabContent aria-busy={isPending} />;
 ```
 
-组件接收的新值会触发开销较大的派生渲染，但当前组件无法控制该值的更新位置时，可以使用 `useDeferredValue` 延后对应子树的更新。`useDeferredValue` 用于调整渲染优先级，不用于减少或延迟网络请求。
+When a new value received by a component triggers an expensive derived render and the current component cannot control where that value is updated, you may use `useDeferredValue` to defer updating the corresponding subtree. Use `useDeferredValue` to adjust rendering priority, not to reduce or delay network requests.
 
 ```tsx
 import { memo, useDeferredValue } from "react";
@@ -319,9 +319,9 @@ export const SearchResults: FC<SearchResultsProps> = (props) => {
 };
 ```
 
-## 保留隐藏界面的状态
+## Preserving State in Hidden Interfaces
 
-项目使用支持 `Activity` 的 React 版本，且频繁切换显示状态的界面需要保留内部状态和 DOM 时，可以使用 `Activity`。隐藏期间子组件的 Effect 会被清理，因此 Effect 必须完整实现清理逻辑。
+When the project uses a React version that supports `Activity` and an interface that switches visibility frequently must preserve its internal state and DOM, you may use `Activity`. Effects in child components are cleaned up while hidden, so every Effect must implement complete cleanup logic.
 
 ```tsx
 import { Activity } from "react";
@@ -342,11 +342,11 @@ export const Sidebar: FC<SidebarProps> = (props) => {
 };
 ```
 
-# 组件定义位置
+# Component Definition Location
 
-组件必须在模块顶层定义，不得在另一个组件函数内部定义。
+Components must be defined at the module's top level and must not be defined inside another component function.
 
-# React 文件命名
+# React File Naming
 
-- React 组件文件使用 PascalCase。
-- Hook 文件使用 `useXxx.ts` 或 `useXxx.tsx`。
+- Use PascalCase for React component files.
+- Name Hook files `useXxx.ts` or `useXxx.tsx`.

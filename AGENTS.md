@@ -1,13 +1,14 @@
 # AGENTS.md
 
-## 编写规则
+## Writing Rules
 
-- 使用直接、明确的指令句描述目标行为、适用条件和期望结果。例如：“组件必须放在独立文件中”“输出仅包含修改后的代码”。
-- 默认只描述应当采用的做法，并只提供与期望行为一致的正确示例。
-- 仅当涉及硬性边界、正面指令无法消除歧义，或模型反复产生特定错误时，补充“禁止”“不得”等负面指令。
-- 使用负面指令时，明确其适用范围；存在可行替代方案时，同时说明应当采用的做法。
-- 仅当正确示例不足以消除常见歧义时提供错误示例；错误示例应明确标记、保持精简，并紧邻对应的正确示例。
-- 按规则效力选择措辞：“必须”“禁止”“不得”表示硬性约束，“应当”表示默认规则，“优先”表示首选方案，“可以”表示允许但不要求。
-- 每个 Skill 必须自包含，独立提供完成目标所需的规则、流程和上下文。
-- 每个 Skill 必须自包含并可独立执行，不得在 `description` 或 SKILL.md 中指示 AI 读取、调用或依赖其他 Skill。Agent 可以根据任务需要独立选择多个 Skill；当前 Skill 所需的补充内容必须放在自身的 `references` 中。
-- 需要提高 AI 对 Skill 的识别和命中率时，必须完善该 Skill 自身的 `description`，明确描述适用场景、触发条件和能力边界。
+- Skills must always be written in English.
+- Use direct and explicit directive sentences to describe the intended behavior, applicable conditions, and expected results. For example: “Components must be placed in separate files.” “Output only the modified code.”
+- By default, describe only the practices that should be followed and provide only correct examples that align with the expected behavior.
+- Add negative instructions such as “prohibited” and “must not” only when hard boundaries are involved, positive instructions cannot eliminate ambiguity, or the model repeatedly makes a specific error.
+- When using negative instructions, clearly define their scope; when a viable alternative exists, also state the practice that should be followed.
+- Provide incorrect examples only when correct examples are insufficient to eliminate common ambiguity; incorrect examples should be clearly labeled, kept concise, and placed immediately next to the corresponding correct examples.
+- Choose wording according to the force of the rule: “must,” “prohibited,” and “must not” indicate hard constraints; “should” indicates a default rule; “prefer” indicates the preferred approach; and “may” indicates permission without requirement.
+- Each Skill must be self-contained and independently provide the rules, process, and context required to accomplish its goal.
+- Each Skill must be self-contained and independently executable. Do not instruct the AI in `description` or SKILL.md to read, invoke, or depend on other Skills. An Agent may independently select multiple Skills as needed for the task; any supplementary content required by the current Skill must be placed in its own `references`.
+- When improving the AI's ability to recognize and trigger a Skill, refine that Skill's own `description` to clearly describe its applicable scenarios, trigger conditions, and capability boundaries.
