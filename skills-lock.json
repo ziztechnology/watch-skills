@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "toooony-fe-spec": {
+      "source": "ziztechnology/watch-skills",
+      "sourceType": "github",
+      "skillPath": "toooony-fe-spec/SKILL.md",
+      "computedHash": "82048dccf91c21b66a1fecb0a2ee691cd4b305dbefe4fb4ab41ccd2bb1ae79d3"
+    },
+    "toooony-react": {
+      "source": "ziztechnology/watch-skills",
+      "sourceType": "github",
+      "skillPath": "toooony-react/SKILL.md",
+      "computedHash": "be3825b29bda6e0f66bf2079add7201f33e1d0910334d6c6b988e6565b69c7cf"
+    },
+    "toooony-spec": {
+      "source": "ziztechnology/watch-skills",
+      "sourceType": "github",
+      "skillPath": "toooony-spec/SKILL.md",
+      "computedHash": "1dcb274f4e4cc914b6a0924bce7eb0a9a66d8aa208cb2e4c26e20e1160d93994"
+    },
+    "toooony-watch-dev": {
+      "source": "ziztechnology/watch-skills",
+      "sourceType": "github",
+      "skillPath": "toooony-watch-dev/SKILL.md",
+      "computedHash": "5afd7c3f29530670a01279f937e4df413e2042882a8d0e38ac11177c1ad4457d"
+    },
+    "toooony-watch-sdk": {
+      "source": "ziztechnology/watch-skills",
+      "sourceType": "github",
+      "skillPath": "toooony-watch-sdk/SKILL.md",
+      "computedHash": "badd5c83aab45dc3b159c7c495e2035262f2a095224c6ddb16551e4f8ab0d84c"
+    }
+  }
+}
