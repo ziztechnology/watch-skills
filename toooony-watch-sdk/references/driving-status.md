@@ -4,23 +4,34 @@
 
 ### Handle Status Values
 
-| Status               | English Label      | Default Priority |
-| -------------------- | ------------------ | ---------------: |
-| `STOPPED`            | Stopped            |                0 |
-| `STEADY_DRIVING`     | Steady driving     |                0 |
-| `ACCELERATION`       | Acceleration       |                1 |
-| `BRAKING`            | Braking            |                2 |
-| `LEFT_TURN`          | Left turn          |                3 |
-| `RIGHT_TURN`         | Right turn         |                3 |
-| `RAPID_ACCELERATION` | Rapid acceleration |                4 |
-| `SUDDEN_BRAKING`     | Sudden braking     |                5 |
+| Status               | English Label      |
+| -------------------- | ------------------ |
+| `STOPPED`            | Stopped            |
+| `STEADY_DRIVING`     | Steady driving     |
+| `ACCELERATION`       | Acceleration       |
+| `RAPID_ACCELERATION` | Rapid acceleration |
+| `BRAKING`            | Braking            |
+| `LEFT_TURN`          | Left turn          |
+| `RIGHT_TURN`         | Right turn         |
 
 Related exports:
 
 - `CAR_RUNNING_STATUSES`: all statuses, suitable for iteration;
 - `CAR_RUNNING_LABELS`: Chinese labels corresponding to the statuses;
-- `CAR_RUNNING_STATUS_PRIORITY`: status priorities;
-- `CarRunningStatus`: the TypeScript union type of the eight statuses.
+- `CarRunningStatus`: the TypeScript union type of the seven statuses.
+
+For SDK 0.1.0 and later, treat this table as the complete public status set. Remove legacy `SUDDEN_BRAKING` branches and imports of the removed `CAR_RUNNING_STATUS_PRIORITY` export when upgrading.
+
+### Apply Status Selection Rules
+
+Let `DrivingStatusController` resolve simultaneous evidence in this order:
+
+1. Strong longitudinal action: `RAPID_ACCELERATION` or strong braking evidence.
+2. `LEFT_TURN` or `RIGHT_TURN`.
+3. Normal longitudinal action: `ACCELERATION` or normal braking evidence.
+4. Base status: `STOPPED` or `STEADY_DRIVING`.
+
+Both normal and strong braking evidence produce the public `BRAKING` status. Do not infer braking strength from `event.status`, a controller snapshot, or the driving expression player. Use diagnostic events when detector-level evidence is required for tuning or troubleshooting.
 
 ### Continuously Monitor the Stable Status
 

@@ -1,6 +1,6 @@
 ---
 name: toooony-watch-sdk
-description: Integration, implementation, testing, and review guidance for the Toooony watch face frontend SDK @ziztechnology/dial-library, covering basic sensors, driving status detection and one-time analysis, driving expression configuration and playback, media URLs, page lifecycle, Sticker carousels, in-car multimedia controls, and the browser testing Runtime exported from the /testing subpath. Use when writing, completing, modifying, fixing, refactoring, testing, or reviewing watch face frontend code that uses this SDK, including Runtime Bridge compatibility, local sensor and lifecycle simulation, multimedia command testing, player resource cleanup, debugging, and troubleshooting.
+description: Integration, implementation, testing, and review guidance for the Toooony watch face frontend SDK @ziztechnology/dial-library, covering basic sensors, the SDK 0.1.0+ seven-state driving model, schema v2 driving expression configuration and legacy migration, one-time analysis, expression playback, media URLs, page lifecycle, Sticker carousels, in-car multimedia controls, and the browser testing Runtime exported from the /testing subpath. Use when writing, completing, modifying, fixing, refactoring, testing, or reviewing watch face frontend code that uses this SDK, including Runtime Bridge compatibility, driving-status migration, local sensor and lifecycle simulation, multimedia command testing, player resource cleanup, debugging, and troubleshooting.
 ---
 
 # Workflow
@@ -26,6 +26,7 @@ description: Integration, implementation, testing, and review guidance for the T
 
 - Use sensor and in-car multimedia capabilities only through `@ziztechnology/dial-library`. Do not call internal methods injected by the Runtime into `window` directly.
 - Driving status sensors require Toooony Runtime `v1.5.22` or later and are available only to approved `PACKAGED_H5` applications.
+- For projects using SDK 0.1.0 or later, implement the seven public driving statuses and schema v2 driving expression configuration. Treat schema v1 as migration input only, and consume the normalized v2 result.
 - Sensors and in-car multimedia depend on Toooony Runtime. Use mock data or isolate Runtime calls in standard browsers, local tests, Node.js, and server-side rendering environments.
 - Import `@ziztechnology/dial-library/testing` only from browser-based test or local-development entry points. Install its simulated Runtime before invoking Runtime-dependent APIs or creating Runtime-dependent SDK objects, and restore it after destroying those objects.
 - Check `available` before reading a sensor field's `value`. Distinguish failure causes through `unavailableReason`.

@@ -16,9 +16,9 @@ if (!config) {
 
 When the configuration is missing or invalid, the function returns `null`. The SDK does not silently add default media.
 
-### Write a Configuration
+### Write a Current Configuration
 
-With `schemaVersion: 1`, `states` must contain exactly eight statuses. Each status may use one of the following media types:
+`CompleteDrivingExpressionsConfig` uses `schemaVersion: 2`. Its `states` object must contain exactly the seven current statuses. Each status may use one of the following media types:
 
 ```ts
 type StructuredDrivingExpressionMedia =
@@ -40,19 +40,24 @@ Minimal example:
 
 ```ts
 const rawConfig = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   states: {
     STOPPED: { kind: 'emoji', text: '😐' },
     STEADY_DRIVING: { kind: 'emoji', text: '😊' },
     ACCELERATION: { kind: 'emoji', text: '😄' },
     RAPID_ACCELERATION: { kind: 'emoji', text: '😲' },
     BRAKING: { kind: 'emoji', text: '😣' },
-    SUDDEN_BRAKING: { kind: 'emoji', text: '😱' },
     LEFT_TURN: { kind: 'emoji', text: '🤨' },
     RIGHT_TURN: { kind: 'emoji', text: '🤨' },
   },
 };
 ```
+
+### Migrate a Legacy Configuration
+
+Use schema v1 only as migration input. `parseDrivingExpressionsConfig()` accepts a v1 configuration only when it contains all eight legacy statuses. It returns a complete schema v2 configuration, preserves the legacy `BRAKING` media, and discards the legacy `SUDDEN_BRAKING` media.
+
+Reject incomplete v1 configurations. Reject schema v2 configurations that contain `SUDDEN_BRAKING` or any other unknown status. Always create, persist, and send schema v2 configurations after migration.
 
 ### Select a Configuration API
 
@@ -93,7 +98,7 @@ const config = parseDrivingExpressionsConfig(rawConfig, {
 });
 ```
 
-`resolveDrivingExpression()` falls back to the `STEADY_DRIVING` media when a legacy status is missing. `resolveDrivingExpressionStrict()` does not automatically use other media; it throws an error when a status is missing and no fallback media is specified. The player uses the latter, strict rule.
+`resolveDrivingExpression()` preserves the old partial-config behavior by falling back to `STEADY_DRIVING` media when a requested status is missing. Do not rely on that fallback for newly parsed configurations, which are complete. `resolveDrivingExpressionStrict()` does not automatically use other media; it throws an error when a status is missing and no fallback media is specified. The player uses the latter, strict rule.
 
 `parseDrivingExpressionsConfig()`, `tryParseDrivingExpressionsConfig()`, and `readDrivingExpressionsConfig(raw)` all accept either a parsed object or a JSON string containing that object.
 
