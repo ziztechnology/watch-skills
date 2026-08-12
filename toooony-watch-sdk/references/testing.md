@@ -5,6 +5,7 @@
 - [Choose the Narrowest Test Boundary](#choose-the-narrowest-test-boundary)
 - [Install the Simulated Runtime](#install-the-simulated-runtime)
 - [Test Sensor-Dependent Behavior](#test-sensor-dependent-behavior)
+- [Test Bluetooth Now Playing](#test-bluetooth-now-playing)
 - [Test Driving Expression Configuration](#test-driving-expression-configuration)
 - [Test In-Car Multimedia](#test-in-car-multimedia)
 - [Test Runtime and Browser Lifecycle](#test-runtime-and-browser-lifecycle)
@@ -16,7 +17,7 @@
 Select the test boundary according to the behavior under test:
 
 - Pass a `sensorProvider` and, when necessary, a controlled `clock` directly to `DrivingStatusController` when testing only driving-state classification, confirmation windows, or provider failures.
-- Install the simulated Runtime from `@ziztechnology/dial-library/testing` when testing application code that calls Runtime-dependent SDK APIs such as `unifiedSensorInfo()`, reads Runtime driving expression configuration, receives in-car multimedia commands, or reacts to Runtime lifecycle events.
+- Install the simulated Runtime from `@ziztechnology/dial-library/testing` when testing application code that calls Runtime-dependent SDK APIs such as `unifiedSensorInfo()` or `getBluetoothNowPlaying()`, reads Runtime driving expression configuration, receives in-car multimedia commands, or reacts to Runtime lifecycle events.
 - Run final compatibility checks in a supported Toooony Runtime. The simulated Runtime verifies frontend integration but does not verify the target Runtime version, `PACKAGED_H5` approval, device permissions, real sensor timing, WebView media support, or native Bridge behavior.
 
 The testing entry requires a browser `Window`. Run it in a real browser or a test environment that provides the browser APIs required by the feature under test. Calling `installTestingRuntime()` in raw Node.js or during server-side rendering throws an error.
@@ -27,9 +28,7 @@ Import production APIs from the package root and import the testing installer se
 
 ```ts
 import { DrivingStatusController, unifiedSensorInfo } from '@ziztechnology/dial-library';
-import installTestingRuntime, {
-  type TestingRuntimeWindow,
-} from '@ziztechnology/dial-library/testing';
+import installTestingRuntime, { type TestingRuntimeWindow } from '@ziztechnology/dial-library/testing';
 
 const runtimeWindow: TestingRuntimeWindow = installTestingRuntime();
 
@@ -46,6 +45,7 @@ The simulated Runtime delegates DOM events to the real host Window. Continue to 
 The default simulated Runtime provides the following state:
 
 - `unifiedSensorInfo()` returns a complete stationary-device snapshot with strictly increasing timestamps.
+- `getBluetoothNowPlaying()` returns a complete `available: true`, `success: true`, `status: 'IDLE'`, `active: false` snapshot.
 - `readDrivingExpressionsConfig()` returns `null` because no driving expression configuration is installed.
 - The in-car multimedia Bridge is available and records lifecycle notifications, the last reported player state, and Runtime logs.
 
@@ -96,15 +96,68 @@ const runtimeWindow = installTestingRuntime({
 });
 ```
 
+## Test Bluetooth Now Playing
+
+Use `bluetoothNowPlayingProvider` at installation time for a fixed scenario, or call `setBluetoothNowPlayingProvider()` to change the scenario while a test is running. `TestingBluetoothNowPlayingProvider` may return a `BluetoothNowPlayingSnapshot` synchronously or asynchronously.
+
+The default Provider supplies a complete idle snapshot. Reuse it to build a complete playing fixture without duplicating every normalized field:
+
+```ts
+import { getBluetoothNowPlaying } from '@ziztechnology/dial-library';
+import installTestingRuntime from '@ziztechnology/dial-library/testing';
+
+const runtimeWindow = installTestingRuntime();
+const idleSnapshot = await getBluetoothNowPlaying();
+
+runtimeWindow.setBluetoothNowPlayingProvider(() => ({
+  ...idleSnapshot,
+  available: true,
+  success: true,
+  status: 'OK',
+  active: true,
+  title: 'Simulated Track',
+  artist: 'Simulated Artist',
+  playbackState: 3,
+  playbackStateName: 'PLAYING',
+  canPause: true,
+}));
+
+const playingSnapshot = await getBluetoothNowPlaying();
+```
+
+Supply an existing complete fixture during installation when the scenario must be active on the first application read:
+
+```ts
+const runtimeWindow = installTestingRuntime({
+  bluetoothNowPlayingProvider: async () => playingFixture,
+});
+```
+
+Test the state branches independently:
+
+- Use `available: false`, `success: false`, and `active: false` for an unavailable DeviceAgent channel.
+- Use `available: true`, `success: false`, and `active: false` for a Provider permission or read failure.
+- Use `available: true`, `success: true`, and `active: false` for an idle channel with no valid media session.
+- Use all three as true for active metadata, progress, artwork, lyrics, and capability UI.
+
+Use a thrown error and a rejected Promise as separate Provider cases. Assert that application error handling receives the same error object:
+
+```ts
+runtimeWindow.setBluetoothNowPlayingProvider(() => {
+  throw new Error('Simulated synchronous Bridge failure');
+});
+
+runtimeWindow.setBluetoothNowPlayingProvider(() => Promise.reject(new Error('Simulated asynchronous Bridge failure')));
+```
+
+Restore the simulated Runtime in teardown. After `restore()`, `setBluetoothNowPlayingProvider()` and other mutating helpers on that testing object must throw. Create a new simulated Runtime for the next test instead of reusing the restored object.
+
 ## Test Driving Expression Configuration
 
 Set, replace, or clear the Runtime-provided configuration while the page is running:
 
 ```ts
-import {
-  OFFICIAL_DRIVING_EXPRESSIONS_CONFIG,
-  readDrivingExpressionsConfig,
-} from '@ziztechnology/dial-library';
+import { OFFICIAL_DRIVING_EXPRESSIONS_CONFIG, readDrivingExpressionsConfig } from '@ziztechnology/dial-library';
 
 runtimeWindow.setDrivingExpressionsConfig(OFFICIAL_DRIVING_EXPRESSIONS_CONFIG);
 const config = readDrivingExpressionsConfig();
@@ -184,6 +237,7 @@ Cover the paths relevant to the feature:
 - Verify the default stationary snapshot and the expected initial UI.
 - Verify recorded or generated sensor transitions with valid sample timestamps.
 - Verify unavailable fields, thrown providers, rejected providers, and fallback timing.
+- Verify the default Bluetooth IDLE snapshot, all three Bluetooth state branches, active metadata and artwork URIs, synchronous and asynchronous Providers, thrown and rejected Provider failures, and post-restore mutation rejection.
 - Verify missing, valid, replaced, cleared, and malformed driving expression configuration.
 - Verify multimedia Ready and Destroyed lifecycle events, every supported command, requested state, reported state, and logged failures.
 - Verify Runtime pause and resume plus the browser lifecycle events used by the application.
