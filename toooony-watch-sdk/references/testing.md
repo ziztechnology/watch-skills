@@ -5,6 +5,7 @@
 - [Choose the Narrowest Test Boundary](#choose-the-narrowest-test-boundary)
 - [Install the Simulated Runtime](#install-the-simulated-runtime)
 - [Test Sensor-Dependent Behavior](#test-sensor-dependent-behavior)
+- [Test One-Time SSO Tokens](#test-one-time-sso-tokens)
 - [Test Bluetooth Now Playing](#test-bluetooth-now-playing)
 - [Test Driving Expression Configuration](#test-driving-expression-configuration)
 - [Test In-Car Multimedia](#test-in-car-multimedia)
@@ -17,7 +18,7 @@
 Select the test boundary according to the behavior under test:
 
 - Pass a `sensorProvider` and, when necessary, a controlled `clock` directly to `DrivingStatusController` when testing only driving-state classification, confirmation windows, or provider failures.
-- Install the simulated Runtime from `@ziztechnology/dial-library/testing` when testing application code that calls Runtime-dependent SDK APIs such as `unifiedSensorInfo()` or `getBluetoothNowPlaying()`, reads Runtime driving expression configuration, receives in-car multimedia commands, or reacts to Runtime lifecycle events.
+- Install the simulated Runtime from `@ziztechnology/dial-library/testing` when testing application code that calls Runtime-dependent SDK APIs such as `unifiedSensorInfo()`, `requestSSOToken()`, or `getBluetoothNowPlaying()`, reads Runtime driving expression configuration, receives in-car multimedia commands, or reacts to Runtime lifecycle events.
 - Run final compatibility checks in a supported Toooony Runtime. The simulated Runtime verifies frontend integration but does not verify the target Runtime version, `PACKAGED_H5` approval, device permissions, real sensor timing, WebView media support, or native Bridge behavior.
 
 The testing entry requires a browser `Window`. Run it in a real browser or a test environment that provides the browser APIs required by the feature under test. Calling `installTestingRuntime()` in raw Node.js or during server-side rendering throws an error.
@@ -45,6 +46,7 @@ The simulated Runtime delegates DOM events to the real host Window. Continue to 
 The default simulated Runtime provides the following state:
 
 - `unifiedSensorInfo()` returns a complete stationary-device snapshot with strictly increasing timestamps.
+- `requestSSOToken()` returns `null`.
 - `getBluetoothNowPlaying()` returns a complete `available: true`, `success: true`, `status: 'IDLE'`, `active: false` snapshot.
 - `readDrivingExpressionsConfig()` returns `null` because no driving expression configuration is installed.
 - The in-car multimedia Bridge is available and records lifecycle notifications, the last reported player state, and Runtime logs.
@@ -95,6 +97,58 @@ const runtimeWindow = installTestingRuntime({
   drivingExpressionsConfig: OFFICIAL_DRIVING_EXPRESSIONS_CONFIG,
 });
 ```
+
+## Test One-Time SSO Tokens
+
+Pass `ssoTokenProvider` during installation when the first application request must receive a token. The Provider receives the Runtime-facing `client_id` and `scope` fields after the public SDK call converts them from `clientID` and `scope`:
+
+```ts
+import { requestSSOToken } from '@ziztechnology/dial-library';
+import installTestingRuntime, {
+  type TestingSSOTokenProvider,
+  type TestingSSOTokenRequest,
+} from '@ziztechnology/dial-library/testing';
+
+const receivedRequests: TestingSSOTokenRequest[] = [];
+const ssoTokenProvider: TestingSSOTokenProvider = (request) => {
+  receivedRequests.push(request);
+
+  return {
+    sso_token: `${request.client_id}:${request.scope}:testing`,
+    expires_in: 300,
+    expires_at: Date.now() + 300_000,
+    device_id: 123,
+    user_id: 456,
+    issuer: 'https://api.example.com',
+    authorize_url: 'https://api.example.com/api/v1/sso/authorize',
+  };
+};
+
+const runtimeWindow = installTestingRuntime({ ssoTokenProvider });
+const ssoToken = await requestSSOToken({
+  clientID: 'finance-watch-face',
+  scope: 'finance.read',
+});
+```
+
+Assert that `receivedRequests` contains `{ client_id: 'finance-watch-face', scope: 'finance.read' }`, and assert the application uses the normalized `ssoToken.token` in the protected request header. Do not use a production token in tests.
+
+Call `setSSOTokenProvider()` to replace the scenario while the test is running:
+
+```ts
+runtimeWindow.setSSOTokenProvider(() => null);
+console.log(await requestSSOToken()); // null
+```
+
+Test these paths independently:
+
+- Omit the Provider to verify the default `null` result.
+- Return a valid Runtime-shaped object to verify normalized `SSOToken` fields.
+- Return `null` or a malformed object to verify the application's unavailable path.
+- Throw synchronously and return a rejected Promise to verify the application's error path.
+- Pass empty `clientID` or `scope` values to verify public input validation.
+
+After `restore()`, `setSSOTokenProvider()` and other mutating helpers on that testing object must throw. Create a new simulated Runtime for the next test.
 
 ## Test Bluetooth Now Playing
 
@@ -237,6 +291,7 @@ Cover the paths relevant to the feature:
 - Verify the default stationary snapshot and the expected initial UI.
 - Verify recorded or generated sensor transitions with valid sample timestamps.
 - Verify unavailable fields, thrown providers, rejected providers, and fallback timing.
+- Verify the default SSO `null` result, explicit client and scope conversion, valid and malformed token responses, synchronous and asynchronous Provider failures, and post-restore mutation rejection.
 - Verify the default Bluetooth IDLE snapshot, all three Bluetooth state branches, active metadata and artwork URIs, synchronous and asynchronous Providers, thrown and rejected Provider failures, and post-restore mutation rejection.
 - Verify missing, valid, replaced, cleared, and malformed driving expression configuration.
 - Verify multimedia Ready and Destroyed lifecycle events, every supported command, requested state, reported state, and logged failures.

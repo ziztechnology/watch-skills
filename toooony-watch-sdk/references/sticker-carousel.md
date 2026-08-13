@@ -1,5 +1,12 @@
 # Sticker Carousel
 
+## Contents
+
+- [Create a Sticker Carousel](#create-a-sticker-carousel)
+- [Choose Image Formats and Fit](#choose-image-formats-and-fit)
+- [Configure Loading and Accessibility](#configure-loading-and-accessibility)
+- [Display Stickers by Set](#display-stickers-by-set)
+
 ## Create a Sticker Carousel
 
 Use `StickerCarousel` to display remote static image, TGS, or WebM Stickers in random order.
@@ -73,19 +80,48 @@ The configuration format is fixed at `schemaVersion: 2`:
 }
 ```
 
-`kind` supports `image`, `tgs`, and `webm`; `image` supports WebP and PNG. `sizeBytes` is measured in bytes and must be a safe integer from `1` to `16,777,216`. `sha256` must be a 64-character hexadecimal string.
+`kind` supports `image`, `tgs`, and `webm`; `image` supports WebP, PNG, and JPEG files with `.jpg` or `.jpeg` extensions. `sizeBytes` is measured in bytes and must be a safe integer from `1` to `16,777,216`. `sha256` must be a 64-character hexadecimal string.
 
-`playbackMode` currently supports only `shuffle`, and `fit` currently supports only `contain`. They are not freely selectable display options. Passing other values throws `StickerConfigError`.
+`playbackMode` supports only `shuffle`. Set `fit` to `contain` for media that must remain fully visible, or to `cover` for images that should fill the stage. Passing another value throws `StickerConfigError`.
 
-`coverUrl`, `coverSizeBytes`, and `coverSha256` must either all be provided or all be omitted. In a standard `StickerCarousel` configuration, every primary media URL and cover URL must be unique, so multiple Stickers cannot share the same cover. Media must use long-lived, public HTTPS URLs.
+## Choose Image Formats and Fit
+
+Use the exported constant and type when application code constructs a configuration instead of loading JSON:
+
+```ts
+import { STICKER_FIT, type StickerFit } from '@ziztechnology/dial-library';
+
+const fullStageFit: StickerFit = STICKER_FIT.COVER;
+const containedFit: StickerFit = STICKER_FIT.CONTAIN;
+```
+
+Keep Telegram-style Stickers on `contain`. Use `cover` only when cropping the edges is acceptable. Set `fit` at the top level for both `StickerCarouselConfig` and `StickerSetCarouselConfig`.
+
+When a cover is present, provide `coverUrl`, `coverSizeBytes`, and `coverSha256` together. Prefer omitting all three when there is no cover; the parser also treats `coverUrl: null` and `coverUrl: ''` as absent when both integrity fields are omitted. In a standard `StickerCarousel` configuration, every primary media URL and cover URL must be unique, so multiple Stickers cannot share the same cover. Media must use long-lived, public HTTPS URLs.
 
 `parseStickerCarouselConfig()` and `parseStickerSetCarouselConfig()` both throw `StickerConfigError` for invalid configuration. If the configuration comes from an API or user input, display the error with `try/catch` instead of continuing to create the carousel.
 
-Set `initialCoverPriorityMs` to prioritize displaying covers during a cold start. The cover loads exclusively for the specified duration; after that duration, the primary media begins loading in parallel. The default value of `0` loads the cover and primary media in parallel.
+Set `initialCoverPriorityMs` to prioritize displaying covers during a cold start. The cover loads exclusively for at most the specified duration. The primary media starts as soon as the cover attempt settles or the priority timer expires, whichever happens first. The default value of `0` loads the cover and primary media in parallel.
 
-Use `onError` to record media loading failures. Use `onMediaCommitted(sticker, mediaKind)` to update UI related to the current media. `mediaKind` may be `image`, `cover`, `tgs`, or `webm`. Call `pause()` and `resume()` to control temporary suspension, and call `destroy()` to release resources permanently. Set `managePageLifecycle: false` when the page already has centralized lifecycle management.
+## Configure Loading and Accessibility
+
+Use `onError` to record media loading failures. Use `onMediaCommitted(sticker, mediaKind)` to update UI related to the current media. `mediaKind` may be `image`, `cover`, `tgs`, or `webm`.
+
+Set `ariaLabelPrefix` when the default `TG Sticker` label is not appropriate:
+
+```ts
+const carousel = new StickerCarousel(container, config, {
+  ariaLabelPrefix: 'Image',
+});
+```
+
+The visible container receives an accessible label in the form `Image：<sticker name>`. Pass a non-empty string.
+
+Call `pause()` and `resume()` to control temporary suspension, and call `destroy()` to release resources permanently. Set `managePageLifecycle: false` when the page already has centralized lifecycle management.
 
 Set `loadTimeoutMs`, `videoLoadTimeoutMs`, `maxTgsCompressedBytes`, `maxTgsJsonBytes`, `maxTgsLayers`, and `maxPrefetchBytes` as needed to control loading timeouts and size limits. You may also pass custom `fetch` and random-number generator functions.
+
+By default, `resolveRuntimeStickerMediaUrl()` maps primary and cover URLs to `/__toooony_sticker_media_proxy` only on `*.watch.local` pages and includes the configured URL, size, and SHA-256 in the proxy request. Other hosts use the original public URL. If a resolved or proxy URL fails during display, the carousel retries the original public URL once. The browser SDK does not calculate or verify SHA-256 itself. Pass `resolveMediaUrl` only when the application needs a different trusted resolver.
 
 Sticker TGS media must also meet the preceding [TGS media requirements for the driving expression player](driving-expressions.md#tgs-media-requirements).
 

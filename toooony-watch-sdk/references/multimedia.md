@@ -1,5 +1,14 @@
 # In-Car Multimedia
 
+## Contents
+
+- [Create a Complete Audio Player](#create-a-complete-audio-player)
+- [Configure Tracks and Playback Modes](#configure-tracks-and-playback-modes)
+- [Synchronize UI State](#synchronize-ui-state)
+- [Play HLS](#play-hls)
+- [Integrate an Existing Custom Player](#integrate-an-existing-custom-player)
+- [Debug Logs](#debug-logs)
+
 ## Create a Complete Audio Player
 
 `MultimediaPlayer` is the recommended framework-agnostic audio player. The application provides an `HTMLAudioElement` and a playlist. The SDK manages playback, track switching, HLS, UI state, and Runtime in-car button integration. React, Vue, and vanilla pages all use it through the same `getSnapshot()` / `subscribe()` interface.
