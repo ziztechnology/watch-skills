@@ -53,6 +53,10 @@ export const Foo = () => {
 };
 ```
 
+# Server Data
+
+Server data requests must use SWR with cached-data fallback, error retries, and revalidation on reconnection so data remains available and reloads correctly on weak or intermittent networks.
+
 # Build and Release
 
 ## Relative Paths
