@@ -72,7 +72,7 @@ try {
 }
 ```
 
-A missing Runtime and missing methods on both paths return `null`. A `null` or malformed selected-path response also returns `null`. Passing an empty `clientID` or `scope` throws `TypeError`. Failures from an available selected-path method, including permission and network failures, reject the Promise and preserve the original error. When the standard t4ony method exists, an invalid response or rejection does not retry through the legacy Bridge.
+A missing Runtime and missing methods on both paths return `null` before supplied options are validated. A `null` or malformed selected-path response also returns `null`. After a standard or compatibility method is selected, passing an empty `clientID` or `scope` throws `TypeError` before that method is called. Failures from an available selected-path method, including permission and network failures, reject the Promise and preserve the original error. When the standard t4ony method exists, an invalid response or rejection does not retry through the legacy Bridge.
 
 ## Protect the One-Time Token
 
