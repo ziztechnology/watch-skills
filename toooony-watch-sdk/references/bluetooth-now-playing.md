@@ -36,7 +36,7 @@ const snapshot: BluetoothNowPlayingSnapshot = await getBluetoothNowPlaying();
 
 The call returns one point-in-time snapshot. It does not subscribe, poll, control playback, resolve artwork, or estimate progress after the response time.
 
-On the standard path, the SDK maps t4ony statuses `OK` and `IDLE` to `success: true`, maps the remaining statuses to `success: false`, and supplies empty `displayTitle`, `displaySubtitle`, and `displayDescription` compatibility fields. It selects the legacy Bridge only when the standard method is missing. A rejection or invalid response from an existing standard method does not fall back to the legacy Bridge.
+On the standard path, the SDK maps t4ony statuses `OK` and `IDLE` to `success: true` and the remaining statuses to `success: false`. It uses the legacy Bridge only when the standard method is missing; an invalid or rejected standard call does not fall back. The standard path supplies empty `displayTitle`, `displaySubtitle`, and `displayDescription` compatibility fields.
 
 ## Handle the Three State Layers
 

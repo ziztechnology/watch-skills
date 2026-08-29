@@ -311,7 +311,7 @@ console.log(stat.type, firstPage.entries, secondPage?.entries);
 
 ## Use JSON Storage
 
-Use `t4ony` Storage for data that must survive a packaged watch-face update. The Runtime gives packaged H5 content an exact virtual origin derived from the watch-face identity and resource revision, so an updated package receives a different origin. Native `localStorage` is scoped to that exact origin and the new revision cannot read values stored under the old one. Use `localStorage` only for revision-local data that may be discarded after an update. The Runtime isolates `t4ony` Storage by `miniProgramId` (`faceId` for a packaged watch face), independently of the resource revision, and preserves that namespace when it removes an old package revision or evicts resource cache. The namespace is removed when the watch-face instance is explicitly deleted, all instances are unbound, or application code calls `clearStorage()`.
+Use `t4ony` Storage for data that must survive packaged watch-face updates or resource-cache eviction. It is scoped by `miniProgramId` (`faceId` for a packaged watch face), independently of the resource revision. Use `localStorage` only for revision-local data that may be discarded after an update. The `t4ony` Storage namespace is removed when the watch-face instance is deleted, all instances are unbound, or application code calls `clearStorage()`.
 
 Storage accepts JSON values. Do not pass functions, `undefined`, symbols, `BigInt`, class instances, or cyclic objects.
 

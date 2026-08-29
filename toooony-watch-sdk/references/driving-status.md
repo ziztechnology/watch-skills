@@ -30,7 +30,7 @@ Related exports:
 - `CAR_RUNNING_LABELS`: Chinese labels corresponding to the statuses;
 - `CarRunningStatus`: the TypeScript union type of the seven statuses.
 
-For SDK 0.1.0 and later, treat this table as the complete public status set. Remove legacy `SUDDEN_BRAKING` branches and imports of the removed `CAR_RUNNING_STATUS_PRIORITY` export when upgrading.
+For SDK 0.1.0 and later, treat this table as the complete public status set. Remove legacy `SUDDEN_BRAKING` branches when upgrading. Let `DrivingStatusController` resolve concurrent driving evidence; do not import or recreate the removed `CAR_RUNNING_STATUS_PRIORITY` map.
 
 ### Continuously Monitor the Stable Status
 

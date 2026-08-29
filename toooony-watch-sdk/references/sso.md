@@ -27,7 +27,7 @@ const ssoToken = await requestSSOToken({
 });
 ```
 
-Both forms return `Promise<SSOToken | null>`. On the standard path, the SDK converts `clientID` to the direct t4ony field `clientId` and converts the raw `ssoToken`, `expiresAtEpochSeconds`, `deviceId`, `userId`, and `authorizeUrl` response fields to the SDK contract. On the compatibility path, it converts `clientID` to `client_id` and normalizes the legacy response shape. Request a fresh token immediately before every protected HTTP request.
+Both forms return `Promise<SSOToken | null>`. The SDK normalizes standard and compatibility responses to the same `SSOToken` contract. Request a fresh token immediately before every protected HTTP request.
 
 Use the exported `RequestSSOTokenOptions` and `SSOToken` types when a project wraps the request or stores the result in a local variable for the duration of one HTTP call.
 
@@ -52,7 +52,7 @@ const loadFinanceData = async (): Promise<Response | null> => {
 
 Use `issuer` as the HTTPS API origin supplied with the token. The returned `SSOToken` also exposes `expiresInSeconds`, `expiresAtMs`, `deviceID`, `userID`, and `authorizeURL` when the application needs those values.
 
-The compatibility fallback transparently waits for the managed Runtime Bridge-ready signal for up to 3 seconds. For an older Runtime that initially rejects with `BRIDGE_DISABLED` and `bridge page inactive`, it waits for the existing `toooony-sso-ready` authentication context and then retries the legacy Runtime call when necessary. The standard t4ony path does not use this readiness protocol. Do not add application-level Runtime-readiness polling.
+The SDK handles compatibility-path Runtime readiness. Do not add application-level Runtime-readiness polling.
 
 ## Handle Absence and Failure
 
@@ -72,7 +72,7 @@ try {
 }
 ```
 
-A missing Runtime and missing methods on both paths return `null` before supplied options are validated. A `null` or malformed selected-path response also returns `null`. After a standard or compatibility method is selected, passing an empty `clientID` or `scope` throws `TypeError` before that method is called. Failures from an available selected-path method, including permission and network failures, reject the Promise and preserve the original error. When the standard t4ony method exists, an invalid response or rejection does not retry through the legacy Bridge.
+Treat a missing Runtime, missing methods on both paths, or an invalid selected-path response as `null`. Treat empty option values as `TypeError` when a Runtime path is available. Preserve rejections from the selected method as failures, and do not retry an invalid or rejected standard call through the legacy Bridge.
 
 ## Protect the One-Time Token
 

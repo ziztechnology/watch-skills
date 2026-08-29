@@ -39,11 +39,9 @@ const controller = new DrivingStatusController();
 controller.start();
 ```
 
-Install the simulated Runtime before invoking a Runtime-dependent API or creating an SDK object that connects to a Runtime Bridge. Importing the production package before installation is safe because installation changes how the SDK resolves the Runtime Window; it does not replace the browser's global `window`.
+Install the simulated Runtime before invoking a Runtime-dependent API or creating an SDK object that connects to a Runtime Bridge. Importing the production package before installation is safe. Continue to use the host browser's `document`, timers, network, media elements, and lifecycle events.
 
-The simulated Runtime delegates DOM events to the real host Window. Continue to use the real `document`, timers, network requests, media elements, `visibilitychange`, `pagehide`, `pageshow`, `freeze`, and `resume` events provided by the browser or test environment.
-
-The simulated Runtime changes how the SDK resolves its Runtime dependencies; it does not install a complete public t4ony namespace on the real `window`. Do not use it as a simulator for application code that calls global t4ony APIs directly. Put direct t4ony calls behind an application-owned typed adapter, inject a mock adapter in unit tests, and complete final validation in a supported packaged watch face on the target Runtime.
+The simulated Runtime does not install a complete public t4ony namespace on the real `window`. Put direct t4ony calls behind an application-owned typed adapter, inject a mock adapter in unit tests, and complete final validation in a supported packaged watch face on the target Runtime.
 
 The default simulated Runtime provides the following state:
 
@@ -258,7 +256,7 @@ runtimeWindow.dispatchRuntimeResume();
 
 Dispatch real browser events on the host Window or `document` to test browser lifecycle paths. Verify `visibilitychange`, `pagehide`, `pageshow`, `freeze`, and `resume` separately when application behavior depends on them.
 
-`dispatchRuntimePause()` and `dispatchRuntimeResume()` simulate native lifecycle delivery. They invoke the installed Runtime lifecycle hook when one exists; the SDK's shared hook chains any previous hook and then notifies its lifecycle subscribers. When no hook exists, the testing Runtime dispatches the corresponding sensor release or resume event instead. `MultimediaPlayer` and `MultimediaController` do not automatically implement application page pause and resume policy. Test the application's media lifecycle handlers with the browser events or application adapter they actually consume, then assert that the application calls `pause()`, reports state when required, and destroys the player only when the page actually exits.
+`dispatchRuntimePause()` and `dispatchRuntimeResume()` simulate native lifecycle delivery. `MultimediaPlayer` and `MultimediaController` do not automatically implement application page pause and resume policy. Test the application's media lifecycle handlers through the browser events or adapter they consume, then assert that the application pauses, reports state when required, and destroys the player only when the page exits.
 
 ## Isolate Tests and Clean Up
 
@@ -286,16 +284,4 @@ if (import.meta.hot) {
 
 Keep the `/testing` import in a dedicated test or local-development entry that production code cannot reach. Do not import it from the production watch face entry or from code executed inside a real Toooony Runtime.
 
-## Verify the Complete Test Matrix
-
-Cover the paths relevant to the feature:
-
-- Verify the default stationary snapshot and the expected initial UI.
-- Verify recorded or generated sensor transitions with valid sample timestamps.
-- Verify unavailable fields, thrown providers, rejected providers, and fallback timing.
-- Verify the default SSO `null` result, explicit client and scope conversion, valid and malformed token responses, synchronous and asynchronous Provider failures, and post-restore mutation rejection.
-- Verify the default Bluetooth IDLE snapshot, all three Bluetooth state branches, active metadata and artwork URIs, synchronous and asynchronous Providers, thrown and rejected Provider failures, and post-restore mutation rejection.
-- Verify missing, valid, replaced, cleared, and malformed driving expression configuration.
-- Verify multimedia Ready and Destroyed lifecycle events, every supported command, requested state, reported state, and logged failures.
-- Verify Runtime pause and resume plus the browser lifecycle events used by the application.
-- Verify that subscriptions and Runtime-dependent objects are destroyed before `restore()` and that repeated tests do not leak the installed simulated Runtime.
+Cover the relevant success, unavailable, failure, lifecycle, and cleanup paths described above.

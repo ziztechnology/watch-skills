@@ -253,7 +253,7 @@ Only Emoji and images can be used as fallback media. On network failure, load ti
 
 Prefer Emoji when deterministic fallback behavior is required. When using a fallback image, verify the URL and resource availability in advance.
 
-The default `loadTimeoutMs` is 5 seconds per timed attempt or stage, not for the complete operation. TGS network loading and Lottie readiness each receive a separate timeout, while decompression, JSON parsing, and the dynamic Lottie import are outside those timers. A resolved media URL and its fallback to the original URL also receive separate attempts. The player retries the status 15 seconds after a failure by default. Change these values with `loadTimeoutMs` and `retryBackoffMs`. Set image and video display behavior with `fit: 'contain' | 'cover'`.
+`loadTimeoutMs` applies to each timed loading stage or attempt, not the complete operation, and defaults to 5 seconds. The player retries the status after `retryBackoffMs`, which defaults to 15 seconds. Set image and video display behavior with `fit: 'contain' | 'cover'`.
 
 ## Manage the Page Lifecycle
 
@@ -263,7 +263,7 @@ By default, `DrivingStatusController` and the driving expression player automati
 - `pagehide`, `pageshow`, `freeze`, and `resume`.
 - Runtime sensor pause and resume notifications.
 
-SDK 0.2.0 uses the complete public t4ony Head Lifecycle API when `onT4onyHeadShow`, `offT4onyHeadShow`, `onT4onyHeadHide`, and `offT4onyHeadHide` are all available. It installs the old Runtime pause and resume hooks only when at least one standard method is missing. If standard listener registration rejects after the complete API was selected, the SDK keeps browser lifecycle events active and does not switch to the legacy hooks. Application code must not call or replace the legacy hooks directly.
+Leave Runtime lifecycle path selection to the SDK. Application code must not call or replace legacy lifecycle hooks directly.
 
 Most watch faces therefore do not need to listen to `visibilitychange` themselves. If the page already has centralized lifecycle management, disable automatic management and call the corresponding methods manually:
 
