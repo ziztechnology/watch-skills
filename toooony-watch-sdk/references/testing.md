@@ -43,6 +43,8 @@ Install the simulated Runtime before invoking a Runtime-dependent API or creatin
 
 The simulated Runtime delegates DOM events to the real host Window. Continue to use the real `document`, timers, network requests, media elements, `visibilitychange`, `pagehide`, `pageshow`, `freeze`, and `resume` events provided by the browser or test environment.
 
+The simulated Runtime changes how the SDK resolves its Runtime dependencies; it does not install a complete public t4ony namespace on the real `window`. Do not use it as a simulator for application code that calls global t4ony APIs directly. Put direct t4ony calls behind an application-owned typed adapter, inject a mock adapter in unit tests, and complete final validation in a supported packaged watch face on the target Runtime.
+
 The default simulated Runtime provides the following state:
 
 - `unifiedSensorInfo()` returns a complete stationary-device snapshot with strictly increasing timestamps.

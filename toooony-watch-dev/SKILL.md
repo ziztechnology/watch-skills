@@ -1,6 +1,6 @@
 ---
 name: toooony-watch-dev
-description: Implementation and review standards for watch face WebView projects, covering the circular visible area, the HTML5 runtime environment, vw/vh size conversion based on 480 × 480 designs, device and Runtime capabilities through @ziztechnology/dial-library, the SDK 0.1.0+ seven-state driving model and schema v2 driving expression configuration, dependency installation, static asset imports, fetch network requests, and relative-path compatibility for build artifacts. Use when writing, completing, modifying, fixing, refactoring, optimizing, or reviewing watch face frontend pages, styles, asset references, network requests, driving-status integrations, device capability integrations, and build configurations.
+description: Implementation and review standards for watch face WebView projects, covering the circular visible area, the HTML5 runtime environment, vw/vh size conversion based on 480 × 480 designs, direct public t4ony APIs typed by @ziztechnology/miniprogram-api-typings, SDK-only capabilities through @ziztechnology/dial-library, the SDK seven-state driving model and schema v2 driving expression configuration, static assets, server data, and relative build paths. Use when writing, completing, modifying, fixing, refactoring, optimizing, or reviewing watch face frontend pages, styles, asset references, network requests, driving-status integrations, device capability integrations, and build configurations.
 ---
 
 # Interface and Styles
@@ -15,11 +15,40 @@ Write styles from a 480 × 480 design and express dimensions with `vw` and `vh`:
 - Use `vh` for vertical dimensions. `1vh` corresponds to `4.8px` in the design.
 - Divide a pixel value from the design by `4.8` to obtain the corresponding `vw` or `vh` value. For example, write a `48px` width as `10vw` and a `96px` height as `20vh`.
 
-# Access Device Capabilities
+# Reference Routing
 
-Use the public APIs exported by `@ziztechnology/dial-library` to access device and Runtime capabilities.
+Read [t4ony.md](references/t4ony.md) when using the public `t4ony` namespace for Runtime, window, device, battery, display, file, storage, Head lifecycle, network, basic sensor, Bluetooth Now Playing, or SSO capabilities. Read the complete reference when a task spans multiple capability groups.
 
-If the project has not installed the SDK, install it with the project's existing package manager:
+# Access Runtime and Device Capabilities
+
+Use the global `t4ony` object directly for APIs declared by `@ziztechnology/miniprogram-api-typings` when the target device runs Toooony Head 1.8.0 or later. Treat the namespace as unavailable on earlier Head versions and keep any required fallback behind an explicit host or capability check. The public `t4ony` namespace is not an internal Runtime compatibility Bridge.
+
+Install the typings as a development dependency with the project's existing package manager:
+
+```bash
+# npm
+npm install --save-dev @ziztechnology/miniprogram-api-typings
+
+# pnpm
+pnpm add --save-dev @ziztechnology/miniprogram-api-typings
+
+# yarn
+yarn add --dev @ziztechnology/miniprogram-api-typings
+```
+
+Append the package to the `types` array in the TypeScript configuration used by the watch face. Preserve every existing entry:
+
+```json
+{
+  "compilerOptions": {
+    "types": ["vite/client", "@ziztechnology/miniprogram-api-typings"]
+  }
+}
+```
+
+Use `@ziztechnology/dial-library` for driving status, driving expressions, Sticker carousels, in-car multimedia, normalized SDK return shapes, browser SDK simulation, and capabilities that the SDK intentionally implements over internal compatibility Bridges. Do not call any Runtime-injected `window.xxx` object outside the public `window.t4ony` namespace directly.
+
+Install the SDK when the selected capability requires its public abstraction:
 
 ```bash
 # npm

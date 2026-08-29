@@ -16,5 +16,5 @@ npx skills add ziztechnology/watch-skills
 | [`toooony-spec`](./toooony-spec/)           | Defines JavaScript and TypeScript naming, syntax, type design, file organization, and testing conventions                         |       |
 | [`toooony-fe-spec`](./toooony-fe-spec/)     | Defines source layout, code ownership, component boundaries, and file naming conventions for frontend projects                    |       |
 | [`toooony-react`](./toooony-react/)         | Defines conventions for components, state, Effects, rendering, and code splitting in React and JSX/TSX                            |       |
-| [`toooony-watch-dev`](./toooony-watch-dev/) | Provides guidance on watch face Webview interfaces, device capabilities, static assets, network requests, and build configuration |       |
-| [`toooony-watch-sdk`](./toooony-watch-sdk/) | Provides guidance on SDK integration, implementation, testing, and troubleshooting                                                |       |
+| [`toooony-watch-dev`](./toooony-watch-dev/) | Provides guidance on watch face WebView interfaces, direct public t4ony APIs and typings, SDK capability boundaries, static assets, server data, and build configuration |       |
+| [`toooony-watch-sdk`](./toooony-watch-sdk/) | Provides guidance on SDK integration, t4ony-first Runtime compatibility, internal Bridge encapsulation, testing, and troubleshooting |       |

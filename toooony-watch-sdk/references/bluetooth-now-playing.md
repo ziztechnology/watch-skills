@@ -11,16 +11,18 @@
 
 ## Meet the Runtime Capability Requirements
 
-Use Bluetooth Now Playing only in a packaged H5 watch face loaded by Toooony Runtime. Enable one of these `customFields` keys with a true value:
+Use Bluetooth Now Playing only in a packaged H5 watch face loaded by Toooony Runtime. SDK 0.2.0 first calls the public `t4ony.getBluetoothNowPlaying()` method when it exists. The standard t4ony path does not require an old Handler.
+
+When the application must support an older Runtime through the SDK compatibility fallback, enable one of these `customFields` keys with a true value:
 
 - `getBluetoothNowPlaying` (preferred)
 - `bluetoothNowPlaying`
 - `nowPlaying`
 - `musicNowPlaying`
 
-External URL H5 pages do not receive the complete watch-face Bridge even if they declare one of these keys. Keep an explicit unavailable or alternative UI for unsupported page types and older Runtime versions.
+External URL H5 pages do not receive the complete capability even if they declare one of these keys. Keep an explicit unavailable or alternative UI for unsupported page types and older Runtime versions.
 
-Use only the public SDK API. Runtime compatibility methods such as `window.getBluetoothNowPlaying()`, `window.getNowPlaying()`, and `window.flutter_inappwebview.callHandler()` are internal ABI surfaces for old watch faces.
+Use only the public SDK API for the normalized contract described in this reference. The public `window.t4ony` namespace may be used directly when the application intentionally wants the raw public t4ony contract. Runtime compatibility methods such as `window.getBluetoothNowPlaying()`, `window.getNowPlaying()`, and `window.flutter_inappwebview.callHandler()` remain internal surfaces for old watch faces and must not be called directly.
 
 ## Read a Single Snapshot
 
@@ -33,6 +35,8 @@ const snapshot: BluetoothNowPlayingSnapshot = await getBluetoothNowPlaying();
 ```
 
 The call returns one point-in-time snapshot. It does not subscribe, poll, control playback, resolve artwork, or estimate progress after the response time.
+
+On the standard path, the SDK maps t4ony statuses `OK` and `IDLE` to `success: true`, maps the remaining statuses to `success: false`, and supplies empty `displayTitle`, `displaySubtitle`, and `displayDescription` compatibility fields. It selects the legacy Bridge only when the standard method is missing. A rejection or invalid response from an existing standard method does not fall back to the legacy Bridge.
 
 ## Handle the Three State Layers
 
@@ -86,6 +90,6 @@ Show lyrics only when `lyricsSupported` is true and `lyrics.trim()` is non-empty
 
 ## Handle Errors and Refreshing
 
-Use `try`/`catch` around the call. A missing Runtime method or malformed known response field rejects with `TypeError`. A Runtime Bridge rejection propagates unchanged, so preserve its original `code`, `handler`, and `error` fields when reporting diagnostics. Treat the three false state branches as normal results, not exceptions.
+Use `try`/`catch` around the call. Missing methods on both paths or a malformed known response field reject with `TypeError`. A selected Runtime method's rejection propagates unchanged. Preserve public t4ony `api`, `code`, and `details` fields or legacy `handler` and `error` fields when reporting diagnostics. Treat the three false state branches as normal results, not exceptions.
 
 Choose refresh timing in application code. Stop periodic reads while the page is hidden or suspended, prevent overlapping requests, and restart only when the page becomes visible and the UI still needs live metadata. Do not add polling or subscriptions inside an SDK wrapper around `getBluetoothNowPlaying()`.

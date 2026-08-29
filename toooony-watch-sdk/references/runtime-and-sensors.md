@@ -10,10 +10,10 @@ You may also use pnpm or yarn.
 
 ## Verify the Runtime Environment
 
-- Use Toooony Runtime `v1.5.22` or later.
+- Use Toooony Runtime `v1.7.0.3` or later for driving-status sensor features in SDK 0.2.0.
 - Before using driving status sensors, verify that the application is an approved `PACKAGED_H5`.
 - Call sensor and in-car multimedia APIs only in Toooony Runtime. Use mock data in standard browsers, Node.js, server-side rendering, and local tests.
-- Access capabilities through the public exports of `@ziztechnology/dial-library`. Do not use internal methods injected by the Runtime into `window` directly.
+- Access the SDK behavior described in this reference through the public exports of `@ziztechnology/dial-library`. The public `window.t4ony` namespace may be used directly when the application intentionally wants its raw public API, but do not call any other Runtime-injected `window` method directly.
 
 ## Read Basic Sensors
 
@@ -44,6 +44,8 @@ if (info.linearAcceleration.available) {
   console.log('Linear acceleration:', { x, y, z }, info.linearAcceleration.unit);
 }
 ```
+
+`unifiedSensorInfo()` intentionally continues to use an internal Runtime compatibility Bridge through the SDK. Do not call `window.unifiedSensorInfo()` directly. Do not replace this SDK call with `t4ony.getSensorSnapshot()` in driving code: the public t4ony snapshot does not contain the atomic `drivingMotionFrame` or `drivingSensorContext` required for calibration, polling, and classification.
 
 Check `available` before reading `value` from any sensor field:
 

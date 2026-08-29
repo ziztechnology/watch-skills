@@ -263,6 +263,8 @@ By default, `DrivingStatusController` and the driving expression player automati
 - `pagehide`, `pageshow`, `freeze`, and `resume`.
 - Runtime sensor pause and resume notifications.
 
+SDK 0.2.0 uses the complete public t4ony Head Lifecycle API when `onT4onyHeadShow`, `offT4onyHeadShow`, `onT4onyHeadHide`, and `offT4onyHeadHide` are all available. It installs the old Runtime pause and resume hooks only when at least one standard method is missing. If standard listener registration rejects after the complete API was selected, the SDK keeps browser lifecycle events active and does not switch to the legacy hooks. Application code must not call or replace the legacy hooks directly.
+
 Most watch faces therefore do not need to listen to `visibilitychange` themselves. If the page already has centralized lifecycle management, disable automatic management and call the corresponding methods manually:
 
 ```ts
